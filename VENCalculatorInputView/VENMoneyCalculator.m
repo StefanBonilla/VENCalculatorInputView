@@ -2,7 +2,6 @@
 #import "NSString+VENCalculatorInputView.h"
 
 @interface VENMoneyCalculator ()
-@property (strong, nonatomic) NSNumberFormatter *numberFormatter;
 @end
 
 @implementation VENMoneyCalculator
@@ -35,38 +34,18 @@
         }
     }
     if ([result isKindOfClass:[NSNumber class]]) {
-        NSInteger integerExpression = [(NSNumber *)result integerValue];
-        CGFloat floatExpression = [(NSNumber *)result floatValue];
-        if (integerExpression == floatExpression) {
-            return [(NSNumber *)result stringValue];
-        } else if (floatExpression >= CGFLOAT_MAX || floatExpression <= CGFLOAT_MIN || isnan(floatExpression)) {
-            return @"0";
-        } else {
-            NSString *moneyFormattedNumber = [[self numberFormatter] stringFromNumber:@(floatExpression)];
-            return [moneyFormattedNumber stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-        }
-    } else {
-        return nil;
-    }
+        NSString *resultStr = [[result stringValue] stringByReplacingOccurrencesOfString:@"." withString:[self decimalSeparator]];
+        return resultStr;
+    } 
+    return nil;
 }
 
 - (void)setLocale:(NSLocale *)locale {
     _locale = locale;
-    self.numberFormatter.locale = locale;
 }
 
 
 #pragma mark - Private
-
-- (NSNumberFormatter *)numberFormatter {
-    if (!_numberFormatter) {
-        _numberFormatter = [NSNumberFormatter new];
-        [_numberFormatter setLocale:self.locale];
-        [_numberFormatter setNumberStyle:NSNumberFormatterCurrencyStyle];
-        [_numberFormatter setCurrencySymbol:@""];
-    }
-    return _numberFormatter;
-}
 
 - (NSString *)sanitizedString:(NSString *)string {
     NSString *groupingSeperator = [self.locale objectForKey:NSLocaleGroupingSeparator];

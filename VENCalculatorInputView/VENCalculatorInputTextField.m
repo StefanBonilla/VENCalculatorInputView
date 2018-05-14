@@ -17,6 +17,7 @@
 }
 
 - (void)awakeFromNib {
+    [super awakeFromNib];
     [self setUpInit];
 }
 
@@ -26,7 +27,19 @@
     VENCalculatorInputView *inputView = [VENCalculatorInputView new];
     inputView.delegate = self;
     inputView.locale = self.locale;
-    self.inputView = inputView;
+    
+    // @sbonilla
+    // For the IPhone X, we want to put the calculator within a container view such that we add spacing to the bottom of the view.
+    // Otherwise the text field's input view is just the calculator input view.
+    if (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPhone && (NSInteger)UIScreen.mainScreen.nativeBounds.size.height == 2436) {
+        UIView *containerView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, inputView.bounds.size.width, inputView.bounds.size.height + 30.0)];
+        containerView.backgroundColor = [inputView numberButtonBackgroundColor];
+        [containerView addSubview:inputView];
+        self.inputView = containerView;
+    }
+    else {
+        self.inputView = inputView;
+    }
 
     VENMoneyCalculator *moneyCalculator = [VENMoneyCalculator new];
     moneyCalculator.locale = self.locale;
@@ -79,7 +92,12 @@
         } else {
             self.text = subString;
         }
-    } else if ([key isEqualToString:[self decimalSeparator]]) {
+    }
+    // @sbonilla
+    // Added the `&& [self.text length] > 1` clause to fix crash
+    // Crash occurred when entering a decimalSeparator as the first character into a blank field.
+    // Caused an out of bounds exception.
+    else if ([key isEqualToString:[self decimalSeparator]] && [self.text length] > 1) {
         NSString *secondToLastCharacterString = [self.text substringWithRange:NSMakeRange([self.text length] - 2, 1)];
         if ([secondToLastCharacterString isEqualToString:[self decimalSeparator]]) {
             self.text = subString;
